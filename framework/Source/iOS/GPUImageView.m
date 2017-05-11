@@ -44,7 +44,7 @@
 @synthesize sizeInPixels = _sizeInPixels;
 @synthesize fillMode = _fillMode;
 @synthesize enabled;
-@synthesize transparent;
+@synthesize transparent = _transparent;
 
 #pragma mark -
 #pragma mark Initialization and teardown
@@ -484,6 +484,15 @@
 {
     _fillMode = newValue;
     [self recalculateViewGeometry];
+}
+
+- (void)setTransparent:(BOOL)transparent {
+    _transparent = transparent;
+    self.layer.opaque = !_transparent;
+    if (_transparent) {
+        [self setBackgroundColorRed:0 green:0 blue:0 alpha:0];
+    }
+    
 }
 
 @end

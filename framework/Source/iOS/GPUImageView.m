@@ -44,6 +44,7 @@
 @synthesize sizeInPixels = _sizeInPixels;
 @synthesize fillMode = _fillMode;
 @synthesize enabled;
+@synthesize transparent;
 
 #pragma mark -
 #pragma mark Initialization and teardown

@@ -414,16 +414,16 @@ static CVReturn renderCallback(CVDisplayLinkRef displayLink,
 
 - (BOOL)readNextVideoFrameFromOutput:(AVAssetReaderOutput *)readerVideoTrackOutput;
 {
-    if (reader.status == AVAssetReaderStatusReading && ! videoEncodingIsFinished)
+    if (reader.status == AVAssetReaderStatusReading && ! videoEncodingIsFinished && !self.pauseVideoRead)
     {
         CMSampleBufferRef sampleBufferRef = [readerVideoTrackOutput copyNextSampleBuffer];
         if (sampleBufferRef) 
         {
             //NSLog(@"read a video frame: %@", CFBridgingRelease(CMTimeCopyDescription(kCFAllocatorDefault, CMSampleBufferGetOutputPresentationTimeStamp(sampleBufferRef))));
+            CMTime currentSampleTime = CMSampleBufferGetOutputPresentationTimeStamp(sampleBufferRef);
             if (_playAtActualSpeed)
             {
                 // Do this outside of the video processing queue to not slow that down while waiting
-                CMTime currentSampleTime = CMSampleBufferGetOutputPresentationTimeStamp(sampleBufferRef);
                 CMTime differenceFromLastFrame = CMTimeSubtract(currentSampleTime, previousFrameTime);
                 CFAbsoluteTime currentActualTime = CFAbsoluteTimeGetCurrent();
                 
@@ -444,6 +444,9 @@ static CVReturn renderCallback(CVDisplayLinkRef displayLink,
                 [weakSelf processMovieFrame:sampleBufferRef];
                 CMSampleBufferInvalidate(sampleBufferRef);
                 CFRelease(sampleBufferRef);
+                if(weakSelf.onProcessMovieFrameDone){
+                    weakSelf.onProcessMovieFrameDone(weakSelf, currentSampleTime);
+                }
             });
 
             return YES;

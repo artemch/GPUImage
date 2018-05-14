@@ -30,7 +30,11 @@
     BOOL isFullYUVRange;
 
     int imageBufferWidth, imageBufferHeight;
+    
+    
 }
+
+@property(nonatomic, assign) BOOL disableAudio;
 
 - (void)processAsset;
 
@@ -91,6 +95,17 @@
     self.asset = nil;
     self.playerItem = playerItem;
 
+    return self;
+}
+
+- (id)initWithURL:(NSURL *)url disableAudio:(BOOL)disableAudio {
+    if (!(self = [self initWithURL:url]))
+    {
+        return nil;
+    }
+    
+    self.disableAudio = disableAudio;
+    
     return self;
 }
 
@@ -215,25 +230,27 @@
     readerVideoTrackOutput.alwaysCopiesSampleData = NO;
     [assetReader addOutput:readerVideoTrackOutput];
 
-    NSArray *audioTracks = [self.asset tracksWithMediaType:AVMediaTypeAudio];
-    BOOL shouldRecordAudioTrack = (([audioTracks count] > 0) && (self.audioEncodingTarget != nil) );
-    AVAssetReaderTrackOutput *readerAudioTrackOutput = nil;
-
-    if (shouldRecordAudioTrack)
-    {
+    if (!self.disableAudio) {
+        NSArray *audioTracks = [self.asset tracksWithMediaType:AVMediaTypeAudio];
+        BOOL shouldRecordAudioTrack = (([audioTracks count] > 0) && (self.audioEncodingTarget != nil) );
+        AVAssetReaderTrackOutput *readerAudioTrackOutput = nil;
+        
+        if (shouldRecordAudioTrack)
+        {
 #if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
-        [self.audioEncodingTarget setShouldInvalidateAudioSampleWhenDone:YES];
+            [self.audioEncodingTarget setShouldInvalidateAudioSampleWhenDone:YES];
 #else
 #warning Missing OSX implementation
 #endif
-        
-        // This might need to be extended to handle movies with more than one audio track
-        AVAssetTrack* audioTrack = [audioTracks objectAtIndex:0];
-        readerAudioTrackOutput = [AVAssetReaderTrackOutput assetReaderTrackOutputWithTrack:audioTrack outputSettings:nil];
-        readerAudioTrackOutput.alwaysCopiesSampleData = NO;
-        [assetReader addOutput:readerAudioTrackOutput];
+            
+            // This might need to be extended to handle movies with more than one audio track
+            AVAssetTrack* audioTrack = [audioTracks objectAtIndex:0];
+            readerAudioTrackOutput = [AVAssetReaderTrackOutput assetReaderTrackOutputWithTrack:audioTrack outputSettings:nil];
+            readerAudioTrackOutput.alwaysCopiesSampleData = NO;
+            [assetReader addOutput:readerAudioTrackOutput];
+        }
     }
-
+    
     return assetReader;
 }
 
@@ -246,11 +263,11 @@
 
     audioEncodingIsFinished = YES;
     for( AVAssetReaderOutput *output in reader.outputs ) {
-        if( [output.mediaType isEqualToString:AVMediaTypeAudio] ) {
+        if( [output.mediaType isEqualToString:AVMediaTypeAudio] && !self.disableAudio) {
             audioEncodingIsFinished = NO;
             readerAudioTrackOutput = output;
         }
-        else if( [output.mediaType isEqualToString:AVMediaTypeVideo] ) {
+        else if( [output.mediaType isEqualToString:AVMediaTypeVideo]) {
             readerVideoTrackOutput = output;
         }
     }

@@ -50,6 +50,7 @@
 - (id)initWithAsset:(AVAsset *)asset;
 - (id)initWithPlayerItem:(AVPlayerItem *)playerItem;
 - (id)initWithURL:(NSURL *)url;
+- (id)initWithURL:(NSURL *)url disableAudio:(BOOL)disableAudio;
 - (void)yuvConversionSetup;
 
 /// @name Movie processing
